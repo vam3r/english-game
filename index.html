@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Midnight School</title>
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #c5c6c7;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #game-container {
+            max-width: 600px;
+            text-align: center;
+            border: 1px solid #1f2833;
+            padding: 30px;
+            background-color: #1f2833;
+            box-shadow: 0px 0px 20px rgba(255, 0, 0, 0.1);
+        }
+        h1 { color: #66fcf1; font-size: 24px; }
+        p { font-size: 18px; line-height: 1.6; }
+        .choice-btn {
+            display: block;
+            background-color: #0b0c10;
+            color: #66fcf1;
+            border: 1px solid #66fcf1;
+            padding: 12px;
+            margin: 10px auto;
+            cursor: pointer;
+            text-decoration: none;
+            width: 80%;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .choice-btn:hover {
+            background-color: #66fcf1;
+            color: #0b0c10;
+        }
+        .death { color: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="scene">
+        <h1>The Midnight School</h1>
+        <p>You woke up inside your English classroom. The lights are off, the clock is stuck at 12:00, and you hear heavy footsteps dragging down the hallway toward your door. What do you do?</p>
+        <button class="choice-btn" onclick="goToScene('hide')">Hide under the teacher's desk</button>
+        <button class="choice-btn" onclick="goToScene('run')">Dash out into the hallway</button>
+    </div>
+</div>
+
+<script>
+    const story = {
+        start: {
+            title: "The Midnight School",
+            text: "You woke up inside your English classroom. The lights are off, the clock is stuck at 12:00, and you hear heavy footsteps dragging down the hallway toward your door. What do you do?",
+            choices: [
+                { text: "Hide under the teacher's desk", target: "hide" },
+                { text: "Dash out into the hallway", target: "run" }
+            ]
+        },
+        hide: {
+            title: "Under the Desk",
+            text: "You squeeze under the desk. The door slowly creaks open. A tall, faceless shadow steps inside, sniffing the air. It stops right next to the desk... but then its phone rings. It answers it and walks away. You survive the night!",
+            choices: [
+                { text: "Play Again", target: "start" }
+            ]
+        },
+        run: {
+            title: "<span class='death'>Game Over</span>",
+            text: "You burst into the hallway. Bad move. The creature was standing right outside the door. Before you can scream, everything goes black.",
+            choices: [
+                { text: "Try Again", target: "start" }
+            ]
+        }
+    };
+
+    function goToScene(sceneKey) {
+        const scene = story[sceneKey];
+        document.getElementById('scene').innerHTML = `
+            <h1>${scene.title}</h1>
+            <p>${scene.text}</p>
+            ${scene.choices.map(c => `<button class="choice-btn" onclick="goToScene('${c.target}')">${c.text}</button>`).join('')}
+        `;
+    }
+</script>
+
+</body>
+</html>
