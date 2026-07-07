@@ -126,28 +126,7 @@
         .btn-danger { background: #991b1b; border-color: #dc2626; grid-column: span 2; font-weight: bold; }
         .btn-danger:hover { background: #dc2626; }
 
-        /* --- SPOTTER ALERT BANNER --- */
-        #spotter-warning {
-            display: none;
-            position: absolute;
-            top: 25%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(153, 27, 27, 0.9);
-            border: 2px solid #ef4444;
-            color: white;
-            padding: 16px 32px;
-            font-size: 16px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-align: center;
-            border-radius: 4px;
-            z-index: 80;
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        /* --- CINEMATIC SNIPER RETICLE OVERLAYS --- */
+        /* --- CINEMATIC SNIPER SCOPE OVERLAYS --- */
         #sniper-overlay {
             display: none;
             position: absolute;
@@ -155,7 +134,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.98) 60%);
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.98) 55%);
             z-index: 100;
             pointer-events: none;
             justify-content: center;
@@ -163,8 +142,8 @@
             flex-direction: column;
         }
         #scope-ring {
-            width: 320px;
-            height: 320px;
+            width: 360px;
+            height: 360px;
             border: 4px dashed #ef4444;
             border-radius: 50%;
             position: relative;
@@ -174,9 +153,9 @@
             animation: spinScope 20s linear infinite;
         }
         @keyframes spinScope { 100% { transform: rotate(360deg); } }
-        #scope-cross-h { width: 400px; height: 2px; background: rgba(239, 68, 68, 0.8); position: absolute; }
-        #scope-cross-v { width: 2px; height: 400px; background: rgba(239, 68, 68, 0.8); position: absolute; }
-        #laser-dot { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; position: absolute; box-shadow: 0 0 15px #ef4444; }
+        #scope-cross-h { width: 500px; height: 2px; background: rgba(239, 68, 68, 0.9); position: absolute; }
+        #scope-cross-v { width: 2px; height: 500px; background: rgba(239, 68, 68, 0.9); position: absolute; }
+        #laser-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; position: absolute; box-shadow: 0 0 15px #ef4444; }
         
         #sniper-hud-text {
             color: #ef4444;
@@ -224,17 +203,14 @@
     <div id="crosshair"></div>
     <div id="flash-bang"></div>
 
-    <!-- Spotter Notification -->
-    <div id="spotter-warning">⚠️ ALERT: DISTANT LENS FLARE DETECTED<br>THE SNIPER IS LOOKING DIRECTLY AT YOU</div>
-
-    <!-- Sniper Scope Threat Engine -->
+    <!-- Sniper Scope View Overlay -->
     <div id="sniper-overlay">
         <div id="scope-ring">
             <div id="scope-cross-h"></div>
             <div id="scope-cross-v"></div>
             <div id="laser-dot"></div>
         </div>
-        <div id="sniper-hud-text">TARGET LOGGED</div>
+        <div id="sniper-hud-text">FEED ACQUIRED</div>
     </div>
 
     <!-- Death Engine Overlay -->
@@ -247,7 +223,7 @@
     <div id="ui-overlay">
         <div class="hud-top interactive">
             <h1>The Pokémon Card Kidnapping</h1>
-            <div class="credits">Case File Compiled by: Graham, Jayden, Rodrigo, Arav</div>
+            <div class="credits">Case File Compiled by: Graham, Jayden, Rodrigo, Arav[cite: 3]</div>
             <p class="controls-hint">⌨️ WALK: W, A, S, D | 🖱️ LOOK AROUND: CLICK & DRAG MOUSE</p>
         </div>
 
@@ -315,46 +291,37 @@
     // Rodrigo's Lemonade Stand Object
     spawnBuilding(3.5, 1.6, 2, -10, 6, 0xf59e0b);
 
-    // --- SPAWN PHYSICAL SNIPER GLINT POSITION ON THE ROOF ---
-    const sniperGlintGeo = new THREE.SphereGeometry(0.25, 16, 16);
-    const sniperGlintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0 });
-    const sniperGlintMesh = new THREE.Mesh(sniperGlintGeo, sniperGlintMat);
-    // Positioned high on top of the Gas Station Roof
-    sniperGlintMesh.position.set(22, 9.3, -14); 
-    scene.add(sniperGlintMesh);
+    // Sniper Target Hardware Constants
+    const sniperPosition = new THREE.Vector3(22, 9.5, -14); 
 
     // --- DETAILED CHARACTER MODEL BUILDER[cite: 3] ---
     const npcs = [];
     let activeNpc = null;
     let isDead = false;
     let sniperCutsceneActive = false;
-    let lookUpIntensity = 0;
+    let playerDummyGroup = null;
+    let shatteredPieces = [];
 
     function buildDetailedHuman(shirtColor, pantsColor, skinColor, hairColor) {
         const humanGroup = new THREE.Group();
 
-        // Torso / Shirt Segment
         const torso = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.1, 0.38), new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.7 }));
         torso.position.y = 1.35;
         humanGroup.add(torso);
 
-        // Head Block
         const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.48, 0.45), new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.8 }));
         head.position.y = 2.14;
         humanGroup.add(head);
 
-        // Detailed Hair Cap Over Head
         const hair = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.18, 0.48), new THREE.MeshStandardMaterial({ color: hairColor }));
         hair.position.set(0, 2.36, -0.02);
         humanGroup.add(hair);
 
-        // Eyes
         const eyeGeo = new THREE.BoxGeometry(0.08, 0.08, 0.04);
         const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.12, 2.18, 0.22); humanGroup.add(leftEye);
         const rightEye = new THREE.Mesh(eyeGeo, eyeMat); rightEye.position.set(0.12, 2.18, 0.22); humanGroup.add(rightEye);
 
-        // Legs
         const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.8, 0.28), new THREE.MeshStandardMaterial({ color: pantsColor }));
         leftLeg.position.set(-0.2, 0.4, 0);
         humanGroup.add(leftLeg);
@@ -363,7 +330,6 @@
         rightLeg.position.set(0.2, 0.4, 0);
         humanGroup.add(rightLeg);
 
-        // Arms
         const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.85, 0.24), new THREE.MeshStandardMaterial({ color: shirtColor }));
         leftArm.position.set(-0.49, 1.25, 0);
         humanGroup.add(leftArm);
@@ -390,12 +356,12 @@
         scene.add(floorBeacon);
     }
 
-    // --- SPAWNING ALL 5 SUSPECTS FROM upload_3.docx[cite: 3] ---
-    generateSuspect(14, -3, 0xdc2626, 0x1f2937, 0xffdbac, 0x451a03, "alexander", "Alexander Foed Hungary"); 
-    generateSuspect(-14, -3, 0x2563eb, 0x3f3f46, 0xe0a96d, 0x18181b, "shopkeeper", "The Pokémon Shopkeeper");
-    generateSuspect(-10, 8, 0xeab308, 0x0284c7, 0xc58c85, 0x27272a, "rodrigo", "Rodrigo Martini");
-    generateSuspect(4, 15, 0x52525b, 0x09090b, 0x8d5524, 0x52525b, "homeless", "The Homeless Man");
-    generateSuspect(0, 11, 0x06b6d4, 0x4b5563, 0xffe4e6, 0xd97706, "gregory", "Gregory Mottingham");
+    // --- SPAWNING ALL 5 SUSPECTS FROM CASE FILE[cite: 3] ---
+    generateSuspect(14, -3, 0xdc2626, 0x1f2937, 0xffdbac, 0x451a03, "alexander", "Alexander Foed Hungary");[cite: 3]
+    generateSuspect(-14, -3, 0x2563eb, 0x3f3f46, 0xe0a96d, 0x18181b, "shopkeeper", "The Pokémon Shopkeeper");[cite: 3]
+    generateSuspect(-10, 8, 0xeab308, 0x0284c7, 0xc58c85, 0x27272a, "rodrigo", "Rodrigo Martini");[cite: 3]
+    generateSuspect(4, 15, 0x52525b, 0x09090b, 0x8d5524, 0x52525b, "homeless", "The Homeless Man");[cite: 3]
+    generateSuspect(0, 11, 0x06b6d4, 0x4b5563, 0xffe4e6, 0xd97706, "gregory", "Gregory Mottingham");[cite: 3]
 
     // Disguised White Cargo Van Construction Asset[cite: 3]
     const vanGroup = new THREE.Group();
@@ -416,14 +382,14 @@
     const wh4 = new THREE.Mesh(wheelGeo, wheelMat); wh4.rotation.z = Math.PI/2; wh4.position.set(-2.2, 0.68, -2.3); vanGroup.add(wh4);
     
     vanGroup.position.set(-6, 0, -16);
-    vanGroup.userData = { name: "van", label: "Disguised White Van" };
+    vanGroup.userData = { name: "van", label: "Disguised White Van" };[cite: 3]
     scene.add(vanGroup);
     npcs.push(vanGroup);
 
     // --- GAME CASE FILES DATA ENGINE ---
     const caseFiles = {
         intro: {
-            text: `<strong>CRIME DOSSIER: 23/06/2026 @ 17:38</strong><br>An 11-year-old boy named Gregory Mottingham was abducted right outside a United Kingdom Pokémon outlet after purchasing a rare item layout[cite: 3]. Clues indicate a suspect using an unmarked white van hidden with an orange construction label overlay took him[cite: 3].<br><br><strong>TIMELINE SUMMARY (PART 4)[cite: 3]:</strong><br><table class='timeline-table'><tr><th>Time</th><th>Event Matrix Log</th></tr><tr><td>17:28</td><td>Gregory walks into Pokémon store</td></tr><tr><td>17:32</td><td>Gregory finds the booster box selection</td></tr><tr><td>17:33</td><td>Gregory goes to cashier terminal; Alexander logs entry right behind</td></tr><tr><td>17:34</td><td>Gregory buys the pack items for $300; Alexander fails to find the card setup</td></tr><tr><td>17:36</td><td>Gregory exits out towards street lane; Alexander trails immediately behind</td></tr><tr><td>17:38</td><td>Gregory reaches the bus stop layout corner; Alexander initiates ambush vector</td></tr></table><br>Walk near any suspect and press <strong>[ E ]</strong> to launch cross-examination files.`,
+            text: `<strong>CRIME DOSSIER: 23/06/2026 @ 17:38</strong><br>An 11-year-old boy named Gregory Mottingham was abducted right outside a United Kingdom Pokémon outlet after purchasing a rare item layout[cite: 3]. Clues indicate a suspect using an unmarked white van hidden with an orange construction label overlay took him[cite: 3].<br><br><strong>TIMELINE SUMMARY:</strong><br><table class='timeline-table'><tr><th>Time</th><th>Event Matrix Log</th></tr><tr><td>17:28</td><td>Gregory walks into Pokémon store</td></tr><tr><td>17:32</td><td>Gregory finds the booster box selection</td></tr><tr><td>17:33</td><td>Gregory goes to cashier terminal; Alexander logs entry right behind</td></tr><tr><td>17:34</td><td>Gregory buys the pack items for $300; Alexander fails to find the card setup</td></tr><tr><td>17:36</td><td>Gregory exits out towards street lane; Alexander trails immediately behind</td></tr><tr><td>17:38</td><td>Gregory reaches the bus stop layout corner; Alexander initiates ambush vector</td></tr></table><br>Walk near any suspect and press <strong>[ E ]</strong> to launch cross-examination files.`,
             choices: [{ text: "Open Active Interrogations", action: "close" }]
         },
         alexander: {
@@ -431,7 +397,7 @@
             choices: [{ text: "End Cross-Examination", action: "close" }, { text: "⚖️ ARREST ALEXANDER FOR THE CRIME", action: "accuse_alex" }]
         },
         gregory: {
-            text: `<strong>SUSPECT PROFILE FILE: GREGORY MOTTINGHAM (VICTIM VECTOR)[cite: 3]</strong><br><br>• <strong>The Theory:</strong> Investigated under the premise that he wanted to 'disappear' permanently to sell his high-stakes card items in another place to evade going to school[cite: 3]. He previously skipped classes to travel out to a Poké-Con convention[cite: 3].<br>• <strong>Alibi Check:</strong> Why would he kidnap himself? Physical timeline metrics confirm he was intercepted by force near the bus line grid[cite: 3].`,
+            text: `<strong>SUSPECT PROFILE FILE: GREGORY MOTTINGHAM[cite: 3]</strong><br><br>• <strong>The Theory:</strong> Investigated under the premise that he wanted to 'disappear' permanently to sell his high-stakes card items in another place to evade going to school[cite: 3].<br>• <strong>Alibi Check:</strong> Why would he kidnap himself? Physical timeline metrics confirm he was intercepted by force near the bus line grid[cite: 3].`,
             choices: [{ text: "End Cross-Examination", action: "close" }, { text: "⚖️ ARREST GREGORY MOTTINGHAM", action: "accuse_wrong_gregory" }]
         },
         shopkeeper: {
@@ -519,57 +485,95 @@
         }
     }
 
-    // --- TACTICAL SNIPER CUTSCENE ENGINE ---
+    // --- TACTICAL SNIPER PERSPECTIVE ENGINE ---
     function executeSniperPunishment(targetName) {
         sniperCutsceneActive = true;
         keys.w = keys.a = keys.s = keys.d = false;
-        
-        const warningBanner = document.getElementById('spotter-warning');
+
         const sniperOverlay = document.getElementById('sniper-overlay');
         const sniperHudText = document.getElementById('sniper-hud-text');
         const flashBang = document.getElementById('flash-bang');
         const deathScreen = document.getElementById('death-screen');
         const deathReason = document.getElementById('death-reason');
 
-        // Sequence Step 1: The Sniper turns on his laser glint and LOOKS AT YOU
-        sniperGlintMesh.material.opacity = 1;
-        warningBanner.style.display = 'block';
+        // Step 1: Capture Detective's old standing footprint & spawn physical copy model
+        const savedPlayerPos = camera.position.clone();
+        savedPlayerPos.y = 0; // Ground height placement
 
-        // Sequence Step 2: Transition from eye-contact over to the Scope Lens Overlay
+        playerDummyGroup = buildDetailedHuman(0x3f3f46, 0x18181b, 0xffdbac, 0x27272a); // Grey Coat Detective Skin
+        playerDummyGroup.position.copy(savedPlayerPos);
+        // Force model to turn and face towards the gas station roof threat location
+        playerDummyGroup.lookAt(sniperPosition.x, 0, sniperPosition.z);
+        scene.add(playerDummyGroup);
+
+        // Step 2: Instantly jump camera perspective into Sniper's Eye Scope on the Roof looking down
+        camera.position.copy(sniperPosition);
+        camera.lookAt(playerDummyGroup.position.x, 1.8, playerDummyGroup.position.z);
+
+        sniperOverlay.style.display = 'flex';
+        sniperHudText.innerHTML = `[ SCOPE ACQUIRED: VIEWING DETECTIVE ]<br>TARGET RANGE: ${Math.round(camera.position.distanceTo(playerDummyGroup.position))} METERS`;
+
+        // Step 3: Mechanical animation simulation of weapon loading mechanics
         setTimeout(() => {
-            warningBanner.style.display = 'none';
-            sniperOverlay.style.display = 'flex';
-            sniperHudText.innerHTML = `[ TARGET LOCK CONFIRMED ]<br>SYSTEM STATUS: ACQUIRING DETECTIVE CORE DATA...`;
-        }, 2200);
+            sniperHudText.innerHTML = `[ TARGET FOCUS LOCK ]<br><span style="color:#ffffff;">*CLICK-CLACK* LOADING LAPUA MAGNUM ROUND INTO CHAMBER...</span>`;
+        }, 1800);
 
-        // Sequence Step 3: Sniper chambers the live weapon round
-        setTimeout(() => {
-            sniperHudText.innerHTML = `[ LOCK ENGAGED ]<br><span style="color:#ffffff;">*CLICK-CLACK* CHAMBERING LAPUA MAGNUM ROUND...</span>`;
-        }, 3800);
-
-        // Sequence Step 4: Weapon fire event matrix execution
+        // Step 4: Weapon fire event & 1-Million-Pieces calculation execution matrix
         setTimeout(() => {
             flashBang.style.opacity = '1';
-            isDead = true; 
-            lookUpIntensity = 0.32; // Forces camera velocity drop animation drop loop
+            
+            // Shatter Engine Matrix: Replace detective body with 100 high-velocity physics components
+            const colors = [0x3f3f46, 0x18181b, 0xffdbac, 0x27272a, 0xdc2626];
+            const piecesCount = 100;
+            
+            for(let i=0; i<piecesCount; i++) {
+                const size = 0.12 + Math.random() * 0.18;
+                const pGeo = new THREE.BoxGeometry(size, size, size);
+                const pMat = new THREE.MeshStandardMaterial({ color: colors[Math.floor(Math.random() * colors.length)] });
+                const pMesh = new THREE.Mesh(pGeo, pMat);
+                
+                // Spawn within the silhouette footprint bounds of the original model
+                pMesh.position.set(
+                    playerDummyGroup.position.x + (Math.random() - 0.5) * 0.8,
+                    playerDummyGroup.position.y + Math.random() * 2.2,
+                    playerDummyGroup.position.z + (Math.random() - 0.5) * 0.8
+                );
+                
+                // Assign high-velocity blast vectors outwards from center axis point
+                pMesh.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.5,
+                        Math.random() * 0.6 + 0.2,
+                        (Math.random() - 0.5) * 0.5
+                    )
+                };
+                
+                scene.add(pMesh);
+                shatteredPieces.push(pMesh);
+            }
 
+            // Remove intact model asset immediately
+            scene.remove(playerDummyGroup);
+
+            // Clean flash presentation and yield screen space to death report logs
             setTimeout(() => {
-                flashBang.style.transition = 'opacity 0.6s ease-out';
+                flashBang.style.transition = 'opacity 0.8s ease-out';
                 flashBang.style.opacity = '0';
                 sniperOverlay.style.display = 'none';
+                isDead = true; 
                 
-                deathReason.innerHTML = `You wrongfully declared <strong>${targetName}</strong> as the primary culprit. The true criminal mastermind's hidden tactical cleaner observed your failure from the roof and executed a structural cleanup protocol to protect Alexander Foed Hungary's matrix[cite: 3].`;
+                deathReason.innerHTML = `You wrongfully declared <strong>${targetName}</strong> as the primary culprit. The criminal organization's roof cleaner locked onto your tracking signatures, chambered a live round, and shot your structural frame into one million pieces to protect Alexander Foed Hungary's data loop[cite: 3].`;
                 deathScreen.style.display = 'flex';
-            }, 150);
+            }, 180);
 
-        }, 6200);
+        }, 4200);
     }
 
     // --- GAME RENDERING AND ANIMATION TICK ---
     function animate() {
         requestAnimationFrame(animate);
 
-        // Standard player movement bounds loop
+        // Core Player Controls Bounds Loop
         if (dialogueWindow.style.display !== 'block' && !isDead && !sniperCutsceneActive) {
             const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
             forward.y = 0; forward.normalize();
@@ -585,18 +589,19 @@
             camera.position.z = Math.max(-45, Math.min(45, camera.position.z));
         }
 
-        // CUTSCENE CORE: Forces player camera to look directly up at the sniper glint roof mesh
-        if (sniperCutsceneActive && !isDead) {
-            camera.lookAt(sniperGlintMesh.position);
-            // Flashes the sniper scope lens glint rapidly
-            sniperGlintMesh.material.color.setHex(Math.floor(Date.now() / 80) % 2 === 0 ? 0xff0000 : 0xffffff);
+        // Keep sniper scope look calculations targeted directly at the dummy detective position
+        if (sniperCutsceneActive && playerDummyGroup) {
+            camera.lookAt(playerDummyGroup.position.x, 1.2, playerDummyGroup.position.z);
         }
 
-        // Dropping dead physics simulation loop
-        if (isDead && lookUpIntensity > 0) {
-            camera.rotation.x += lookUpIntensity;
-            camera.position.y -= 0.12;
-            if(camera.position.y < 0.4) camera.position.y = 0.4;
+        // Particle Physics Processing Engine for the Shattered Pieces
+        if (shatteredPieces.length > 0) {
+            shatteredPieces.forEach(p => {
+                p.position.add(p.userData.velocity);
+                p.userData.velocity.y -= 0.015; // Gravity acceleration drop simulation
+                p.rotation.x += 0.1;
+                p.rotation.y += 0.1;
+            });
         }
 
         // Subtly animate human limbs to make characters feel alive[cite: 3]
@@ -607,7 +612,7 @@
             }
         });
 
-        // Target proximity checking loop
+        // Target proximity checking loops
         let targetFound = false;
         for (let npc of npcs) {
             let spaceDist = camera.position.distanceTo(npc.position);
