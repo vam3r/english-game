@@ -3,248 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Pokémon Card Kidnapping</title>
+    <title>The Pokémon Card Kidnapping - 3D Case File</title>
     <style>
         body {
-            background-color: #121214;
-            color: #e2e8f0;
-            font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            overflow: hidden;
+            background-color: #09090b;
+            font-family: 'Courier New', Courier, monospace;
+            color: #e2e8f0;
+            user-select: none;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to 3D scene */
             display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
             box-sizing: border-box;
+            padding: 20px;
         }
-        #game-container {
-            max-width: 750px;
-            width: 100%;
+        .interactive {
+            pointer-events: auto; /* Re-enable clicking for UI buttons/panels */
+        }
+        .header-panel {
+            background: rgba(24, 24, 27, 0.85);
             border: 2px solid #3f3f46;
-            padding: 30px;
-            background-color: #18181b;
-            box-shadow: 0px 0px 25px rgba(239, 68, 68, 0.1);
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+            backdrop-filter: blur(4px);
         }
-        h1 { color: #ef4444; text-align: center; font-size: 26px; border-bottom: 2px solid #3f3f46; padding-bottom: 10px; }
-        h2 { color: #f59e0b; font-size: 20px; margin-top: 20px; }
-        p { font-size: 16px; line-height: 1.6; color: #d4d4d8; }
-        .menu-grid {
+        h1 { color: #ef4444; margin: 0 0 5px 0; font-size: 22px; }
+        .instructions { color: #f59e0b; font-size: 13px; margin: 0; }
+        
+        .display-panel {
+            background: rgba(18, 18, 20, 0.9);
+            border: 2px solid #ef4444;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            margin: 0 auto 20px auto;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+        }
+        p { font-size: 15px; line-height: 1.5; margin: 0 0 15px 0; }
+        
+        .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 10px;
         }
         .btn {
             background-color: #27272a;
             color: #f4f4f5;
             border: 1px solid #52525b;
-            padding: 12px;
+            padding: 10px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 15px;
+            font-size: 14px;
             border-radius: 4px;
             transition: all 0.2s;
             text-align: center;
         }
         .btn:hover {
             background-color: #ef4444;
-            color: #ffffff;
+            color: white;
             border-color: #ef4444;
-        }
-        .btn-back {
-            background-color: #3f3f46;
-            width: 100%;
-            margin-top: 25px;
         }
         .btn-accuse {
             background-color: #7f1d1d;
             border-color: #b91c1c;
-            grid-column: span 2;
         }
         .btn-accuse:hover {
             background-color: #b91c1c;
         }
-        .timeline-item {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px dashed #3f3f46;
-        }
-        .time-badge { color: #ef4444; font-weight: bold; }
-        .suspect-card {
-            background-color: #242427;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #f59e0b;
-            border-radius: 0 4px 4px 0;
-        }
-        .guilty-text { color: #4ade80; font-weight: bold; font-size: 18px; }
-        .wrong-text { color: #f87171; font-weight: bold; }
+        .success { color: #4ade80; font-weight: bold; }
+        .fail { color: #f87171; font-weight: bold; }
     </style>
+    <!-- Load Three.js Engine Framework from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="game-screen"></div>
-</div>
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <div class="header-panel interactive">
+            <h1>The Pokémon Card Kidnapping</h1>
+            <p class="instructions">🖱️ CLICK ON THE 3D OBJECTS IN THE SCENE TO INVESTIGATE</p>
+        </div>
+
+        <div class="display-panel interactive" id="info-panel">
+            <!-- Dynamic Content Injected Here -->
+        </div>
+    </div>
 
 <script>
-    // Game state tracking
-    const caseData = {
-        title: "The Pokémon Card Kidnapping",
-        intro: "On June 23, 2026, at 17:38, an 11-year-old boy named Gregory Mottingham vanished right outside a Pokémon store in the United Kingdom. He had just purchased a rare Pokémon card for £300 when a man lured him toward a vehicle under the pretense of cleaning it. The doors slammed shut, locked, and the vehicle sped away. As the lead detective, you must review the evidence, cross-examine suspects, and solve the case.",
-        timeline: [
-            { time: "17:28", event: "Gregory walks into the Pokémon store." },
-            { time: "17:32", event: "Gregory finds the 151-booster box." },
-            { time: "17:33", event: "Gregory goes to the cashier to pay. At the exact same time, a man named Alexander walks into the store." },
-            { time: "17:34", event: "Gregory buys the card pack for £300. Alexander searches around but can't find the card box anymore." },
-            { time: "17:36", event: "Gregory starts to walk out of the store. Alexander follows right behind him." },
-            { time: "17:38", event: "Gregory walks near the bus stop. He is approached, lured away, and intercepted by an unmarked white van with a construction label disguise." }
-        ],
-        suspects: {
-            alexander: {
-                name: "Alexander Foed Hungary",
-                motive: "Desperately wanted the £300 Greninja ex SIR card so he could beat his best friend in a Pokémon showdown, and didn't want anyone else in the city owning it.",
-                alibi: "Claims he was at a nearby gas station using the toilet during the exact time of the kidnapping.",
-                evidence: "CCTV logs show Alexander entering the gas station bathroom before 17:38... but there is absolutely no footage of him ever leaving through the front door."
-            },
-            rodrigo: {
-                name: "Rodrigo Martini",
-                motive: "Was nearby selling lemonade to save up for Robux. Entered the Pokémon store to look for a gift card, but they didn't sell them, so he left empty-handed.",
-                alibi: "Verified by the shop's main security cameras.",
-                evidence: "Store CCTV confirms he exited at the same time as the others, completely out in the open, proving he was just a regular bystander."
-            },
-            shopkeeper: {
-                name: "The Shop Keeper",
-                motive: "Rumored to be running a side scam selling fake cards for high prices, and might want to avoid getting caught.",
-                alibi: "Claims he was on an intensive phone call with his best friend during the incident.",
-                evidence: "Phone logs confirm an active call matching his timeline perfectly."
-            },
-            homeless: {
-                name: "The Homeless Man",
-                motive: "He sits outside and sees everything. He knows the extreme value of the card and could easily get back on his feet if he stole and sold it.",
-                alibi: "Remained on the street corner on camera.",
-                evidence: "Street CCTV confirms he stayed in his spot watching the road, completely away from the crime scene location."
-            }
+    // --- 3D ENGINE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x09090b);
+    scene.fog = new THREE.FogExp2(0x09090b, 0.04);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 18, 22);
+    camera.lookAt(0, 0, -2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    // --- LIGHTING ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    directionalLight.position.set(10, 20, 10);
+    scene.add(directionalLight);
+
+    // Spotlight acting as a street lantern / investigation light
+    const spotLight = new THREE.SpotLight(0xef4444, 2, 40, Math.PI / 4, 0.5, 1);
+    spotLight.position.set(0, 15, 0);
+    scene.add(spotLight);
+
+    // --- CREATE 3D ENVIRONMENT WORLD ---
+    // Dark Asphalt Floor
+    const groundGeo = new THREE.PlaneGeometry(60, 60);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    // Grid lines for hacker/cyber map visual feel
+    const grid = new THREE.GridHelper(60, 30, 0x3f3f46, 0x27272a);
+    grid.position.y = 0.01;
+    scene.add(grid);
+
+    // Storage array for interactable assets
+    const clickTargets = [];
+
+    function createSceneObject(geometry, material, x, z, name, labelText, colorHex) {
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, geometry.parameters.height / 2, z);
+        mesh.name = name;
+        scene.add(mesh);
+        clickTargets.push(mesh);
+
+        // Add a small glowing floating indicator beacon above each interactive object
+        const beaconGeo = new THREE.TorusGeometry(0.4, 0.1, 8, 24);
+        const beaconMat = new THREE.MeshBasicMaterial({ color: colorHex });
+        const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+        beacon.position.set(x, geometry.parameters.height + 1.2, z);
+        beacon.rotation.x = Math.PI / 2;
+        beacon.name = name + "_beacon";
+        scene.add(beacon);
+        
+        return mesh;
+    }
+
+    // 1. Pokémon Store (Neon Blue Building)
+    const storeMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.4 });
+    createSceneObject(new THREE.BoxGeometry(6, 5, 6), storeMat, -8, -5, "store", "POKÉMON STORE", 0x3b82f6);
+
+    // 2. The Disguised White Construction Van (White Long Box)
+    const vanMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f5, roughness: 0.5 });
+    createSceneObject(new THREE.BoxGeometry(3, 2.5, 6), vanMat, 4, 4, "van", "WHITE VAN", 0xffffff);
+
+    // 3. Gas Station (Green / Yellow Building)
+    const gasMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
+    createSceneObject(new THREE.BoxGeometry(7, 4, 5), gasMat, 10, -8, "gas_station", "GAS STATION", 0x22c55e);
+
+    // 4. Street Corner / Witness Area (Dark Column placeholder)
+    const cornerMat = new THREE.MeshStandardMaterial({ color: 0x4b5563 });
+    createSceneObject(new THREE.BoxGeometry(2, 3, 2), cornerMat, -6, 8, "corner", "WITNESS CORNER", 0xa1a1aa);
+
+
+    // --- GAME TEXT DATA DATABASE ---
+    const gameData = {
+        main: {
+            text: "<strong>CASE BRIEFING:</strong> On June 23, 2026, at 17:38, 11-year-old Gregory Mottingham was kidnapped right outside a UK Pokémon store after purchasing a rare £300 card. A suspect lured him into a vehicle under false pretenses. Click the 3D world elements to evaluate data logs, cross-examine details, and find the culprit.",
+            options: [{ text: "Open Accusation Terminal", action: "goAccuse" }]
+        },
+        store: {
+            text: "<strong>[LOCATION: THE POKÉMON STORE]</strong><br>CCTV Timeline Summary:<br>• 17:28 - Gregory walks in.<br>• 17:33 - Gregory handles buying the card. Simultaneously, suspect <strong>Alexander Foed Hungary</strong> arrives.<br>• 17:36 - Gregory leaves out the front doors. Alexander trails right behind him tracking him down.",
+            options: [{ text: "Question Shopkeeper", action: "goShopkeeper" }, { text: "Back to Map Overview", action: "goMain" }]
+        },
+        shopkeeper: {
+            text: "<strong>[WITNESS INTERROGATION: THE SHOPKEEPER]</strong><br>• <em>Motive Check:</em> Rumored to swap cards for profit margins.<br>• <em>Alibi Statement:</em> Confirms he stayed behind the terminal desk completely locked into a frantic voice phone call with his companion.<br>• <em>Forensics:</em> Digital phone records back up his status window accurately. He is cleared.",
+            options: [{ text: "Inspect Store Exterior", action: "goStore" }]
+        },
+        van: {
+            text: "<strong>[EVIDENCE VEHICLE: UNMARKED WHITE VAN]</strong><br>Found hidden down an access road disguised with a fake cardboard construction company magnetic tag. Inside, forensic tracking located a mask fabric matching descriptions. Gregory was intercepted directly at this vehicle site at 17:38 when a suspect promised a premium card transaction for €50.",
+            options: [{ text: "Back to Map Overview", action: "goMain" }]
+        },
+        gas_station: {
+            text: "<strong>[LOCATION: THE NEARBY GAS STATION]</strong><br>This is the primary location utilized by suspect <strong>Alexander Foed Hungary</strong> for his alibi statement. He claims he was inside the facility's locked bathroom stalls during the exact minutes the kidnapping took place down the block.",
+            options: [{ text: "Check Bathroom CCTV Logs", action: "goCCTV" }, { text: "Back to Map Overview", action: "goMain" }]
+        },
+        cctv: {
+            text: "<strong>[DIGITAL EVIDENCE: GAS STATION CCTV]</strong><br>CRITICAL DISCOVERY: Video tracks Alexander entering the single corridor bathroom access path before 17:38. However, *he never returns past the front cameras*. Investigation shows a rear emergency fire escape window was left unbolted. His alibi is completely broken!",
+            options: [{ text: "Back to Gas Station", action: "goGas" }]
+        },
+        corner: {
+            text: "<strong>[LOCATION: STREET WITNESS CORNER]</strong><br>Two individuals were located tracking events from this junction during the 17:30 hour window.",
+            options: [{ text: "Interview Rodrigo Martini", action: "goRodrigo" }, { text: "Interview Homeless Man", action: "goHomeless" }, { text: "Back to Map Overview", action: "goMain" }]
+        },
+        rodrigo: {
+            text: "<strong>[SUSPECT PROFILE: RODRIGO MARTINI]</strong><br>• <em>Motive:</em> Was marketing lemonade nearby to stack funding for Robux vouchers. Ducked inside the card shop checking for gaming inventory.<br>• <em>Alibi:</em> Main traffic CCTV confirms he exited at the matching timeframe as Gregory, but kept walking completely away from the vehicle vector with empty hands.",
+            options: [{ text: "Check Other Witness Corner profiles", action: "goCorner" }]
+        },
+        homeless: {
+            text: "<strong>[SUSPECT PROFILE: THE HOMELESS MAN]</strong><br>• <em>Motive:</em> Highly alert of street valuations, could sell high-end cargo to get back on his feet.<br>• <em>Alibi:</em> Stated he watched from his corner. Street peripheral cameras confirm he remained fixed to his spot on the concrete grid line, leaving him physically impossible to lock the van doors.",
+            options: [{ text: "Check Other Witness Corner profiles", action: "goCorner" }]
+        },
+        accuse: {
+            text: "<strong>🚨 SYSTEM RESOLUTION WARNING: SELECT THE PRIMARY CULPRIT</strong><br>Choose who orchestrated the event to secure the card assets:",
+            options: [
+                { text: "Alexander Foed Hungary", action: "win" },
+                { text: "Rodrigo Martini", action: "lose" },
+                { text: "The Shopkeeper", action: "lose" },
+                { text: "The Homeless Man", action: "lose" }
+            ]
         }
     };
 
-    function renderMainScreen() {
-        document.getElementById('game-screen').innerHTML = `
-            <h1>${caseData.title}</h1>
-            <p>${caseData.intro}</p>
-            
-            <h2>Investigation Board</h2>
-            <div class="menu-grid">
-                <button class="btn" onclick="renderTimeline()">View Incident Timeline</button>
-                <button class="btn" onclick="renderSuspects()">Interrogate Suspects</button>
-                <button class="btn" onclick="renderClues()">Examine CCTV & Clues</button>
-                <button class="btn btn-accuse" onclick="renderAccuse()">⚠️ ACCUSE THE CULPRIT ⚠️</button>
-            </div>
-        `;
-    }
-
-    function renderTimeline() {
-        let timelineHTML = `
-            <h1>Incident Timeline</h1>
-            <p>Review the exact sequence of events on 23/06/2026:</p>
-            <div style="margin-top: 20px;">
-        `;
-        caseData.timeline.forEach(item => {
-            timelineHTML += `
-                <div class="timeline-item">
-                    <span class="time-badge">[${item.time}]</span> ${item.event}
-                </div>
-            `;
+    // --- UI NAVIGATION ENGINE ---
+    function updatePanel(sceneKey) {
+        const data = gameData[sceneKey];
+        let html = `<p>${data.text}</p><div class="btn-grid">`;
+        
+        data.options.forEach(opt => {
+            html += `<button class="btn" onclick="handleUiAction('${opt.action}')">${opt.text}</button>`;
         });
-        timelineHTML += `
-            </div>
-            <button class="btn btn-back" onclick="renderMainScreen()">Return to Board</button>
-        `;
-        document.getElementById('game-screen').innerHTML = timelineHTML;
+        
+        html += `</div>`;
+        document.getElementById('info-panel').innerHTML = html;
     }
 
-    function renderSuspects() {
-        let suspectsHTML = `
-            <h1>Suspect Dossiers</h1>
-            <p>Click any suspect to view their motive and alibi statement:</p>
-            <div style="margin-top: 20px;">
-        `;
-        Object.keys(caseData.suspects).forEach(key => {
-            const s = caseData.suspects[key];
-            suspectsHTML += `
-                <div class="suspect-card">
-                    <strong>Name:</strong> ${s.name}<br>
-                    <strong>Stated Alibi:</strong> ${s.alibi}<br>
-                    <strong>Possible Motive:</strong> ${s.motive}
-                </div>
+    function handleUiAction(action) {
+        if (action === "goMain") updatePanel("main");
+        else if (action === "goStore") updatePanel("store");
+        else if (action === "goShopkeeper") updatePanel("shopkeeper");
+        else if (action === "goGas") updatePanel("gas_station");
+        else if (action === "goCCTV") updatePanel("cctv");
+        else if (action === "goCorner") updatePanel("corner");
+        else if (action === "goRodrigo") updatePanel("rodrigo");
+        else if (action === "goHomeless") updatePanel("homeless");
+        else if (action === "goAccuse") updatePanel("accuse");
+        else if (action === "win") {
+            document.getElementById('info-panel').innerHTML = `
+                <h2 class="success">CASE SOLVED SUMMARY 🟢</h2>
+                <p>"Our detective has solved the case..." <strong>Alexander Foed Hungary is guilty!</strong> Faced with your evidence matching the broken bathroom window timeline loop, he confessed. Driven by pure jealousy to beat his peer in a Pokémon confrontation showdown, he stole the card and deployed the construction disguise vehicle. Excellent work!</p>
+                <button class="btn" onclick="handleUiAction('goMain')">Restart Terminal Map</button>
             `;
-        });
-        suspectsHTML += `
-            </div>
-            <button class="btn btn-back" onclick="renderMainScreen()">Return to Board</button>
-        `;
-        document.getElementById('game-screen').innerHTML = suspectsHTML;
-    }
-
-    function renderClues() {
-        document.getElementById('game-screen').innerHTML = `
-            <h1>Forensic & Digital Clues</h1>
-            <p>Your team collected these critical findings from the scene:</p>
-            
-            <div class="suspect-card" style="border-left-color: #ef4444;">
-                <strong>Clue 1: Store Exit Footage</strong><br>
-                CCTV shows Rodrigo Martini exiting right at the same time as Gregory and Alexander. However, Rodrigo's hands are empty and his actions clear him of moving toward the vehicle track.
-            </div>
-            
-            <div class="suspect-card" style="border-left-color: #ef4444;">
-                <strong>Clue 2: The Gas Station Dynamic</strong><br>
-                Alexander Hungarian's alibi falls completely flat. Gas station CCTV clearly tracks him entering the restroom corridor right before the kidnapping took place, but he never exited past the main cameras, suggesting he escaped out the back window directly toward his unmarked white van.
-            </div>
-            
-            <button class="btn btn-back" onclick="renderMainScreen()">Return to Board</button>
-        `;
-    }
-
-    function renderAccuse() {
-        document.getElementById('game-screen').innerHTML = `
-            <h1>Issue an Arrest Warrant</h1>
-            <p>Who intercepted Gregory Mottingham outside the Pokémon shop to steal the Greninja ex SIR card?</p>
-            
-            <div class="menu-grid">
-                <button class="btn" onclick="verifyAccusation('alexander')">Alexander Foed Hungary</button>
-                <button class="btn" onclick="verifyAccusation('rodrigo')">Rodrigo Martini</button>
-                <button class="btn" onclick="verifyAccusation('shopkeeper')">The Shop Keeper</button>
-                <button class="btn" onclick="verifyAccusation('homeless')">The Homeless Man</button>
-            </div>
-            <button class="btn btn-back" onclick="renderMainScreen()">Cancel</button>
-        `;
-    }
-
-    function verifyAccusation(suspectKey) {
-        if (suspectKey === 'alexander') {
-            document.getElementById('game-screen').innerHTML = `
-                <h1>Case Solved!</h1>
-                <p class="guilty-text">"Our detective has solved the case..."</p>
-                <p><strong>Alexander Foed Hungary is GUILTY!</strong></p>
-                <p>Faced with your evidence, Alexander broke down and confessed. At exactly 17:38, he spotted Gregory holding the valuable booster pack. Driven by sheer competition and greed to dominate his friend in an upcoming Pokémon showdown, he decided he had to have it.</p>
-                <p>He slipped out of the gas station bathroom window, bypassed the cameras, intercepted Gregory with a fake offer for a €50 Greninja card, masked him, and threw him into his disguised construction van. Thanks to your tracking, Gregory was found safe and his cards were returned!</p>
-                <button class="btn btn-back" onclick="renderMainScreen()">Play Again</button>
-            `;
-        } else {
-            const name = caseData.suspects[suspectKey].name;
-            document.getElementById('game-screen').innerHTML = `
-                <h1>Wrong Accusation!</h1>
-                <p class="wrong-text">An innocent citizen was falsely accused!</p>
-                <p>You issued an arrest warrant for <strong>${name}</strong>, but their alibi safely held up under investigation. Meanwhile, the true culprit managed to escape across the border with the stolen Greninja card.</p>
-                <button class="btn btn-back" onclick="renderAccuse()">Try Accusing Someone Else</button>
+        } else if (action === "lose") {
+            document.getElementById('info-panel').innerHTML = `
+                <h2 class="fail">CRITICAL ARREST FAILURE 🔴</h2>
+                <p>Alibi held valid under cross-examination context. The target is clear of actions. The accurate offender managed to shift transport assets across state limits with the card pack.</p>
+                <button class="btn" onclick="handleUiAction('goAccuse')">Return to Accusation Interface</button>
             `;
         }
     }
 
-    // Start the game loop
-    renderMainScreen();
-</script>
+    // --- RAYCASTING (DETECTING CLICKS ON 3D OBJECTS) ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
+    window.addEventListener('click', (event) => {
+        // Evaluate normalize device layout coordinates for mouse pointer
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(clickTargets);
+
+        if (intersects.length > 0) {
+            const hitName = intersects[0].object.name;
+            if (hitName === "store") updatePanel("store");
+            if (hitName === "van") updatePanel("van");
+            if (hitName === "gas_station") updatePanel("gas_station");
+            if (hitName === "corner") updatePanel("corner");
+        }
+    });
+
+    // --- ANIMATION DISPLAY LOOP ---
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Slowly spin the floating indicator rings over targets
+        scene.children.forEach(child => {
+            if (child.name && child.name.includes("_beacon")) {
+                child.rotation.z += 0.02;
+            }
+        });
+
+        renderer.render(scene, camera);
+    }
+
+    // Adjust perspective calculation mapping if layout dimensions scale
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Run engine on start loop
+    animate();
+    updatePanel("main");
+
+</script>
 </body>
 </html>
