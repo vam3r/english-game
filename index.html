@@ -3,95 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Midnight School</title>
+    <title>The Pokémon Card Kidnapping</title>
     <style>
         body {
-            background-color: #0b0c10;
-            color: #c5c6c7;
+            background-color: #121214;
+            color: #e2e8f0;
             font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
+            min-height: 100vh;
             box-sizing: border-box;
         }
         #game-container {
-            max-width: 600px;
-            text-align: center;
-            border: 1px solid #1f2833;
+            max-width: 750px;
+            width: 100%;
+            border: 2px solid #3f3f46;
             padding: 30px;
-            background-color: #1f2833;
-            box-shadow: 0px 0px 20px rgba(255, 0, 0, 0.1);
+            background-color: #18181b;
+            box-shadow: 0px 0px 25px rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
         }
-        h1 { color: #66fcf1; font-size: 24px; }
-        p { font-size: 18px; line-height: 1.6; }
-        .choice-btn {
-            display: block;
-            background-color: #0b0c10;
-            color: #66fcf1;
-            border: 1px solid #66fcf1;
+        h1 { color: #ef4444; text-align: center; font-size: 26px; border-bottom: 2px solid #3f3f46; padding-bottom: 10px; }
+        h2 { color: #f59e0b; font-size: 20px; margin-top: 20px; }
+        p { font-size: 16px; line-height: 1.6; color: #d4d4d8; }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #27272a;
+            color: #f4f4f5;
+            border: 1px solid #52525b;
             padding: 12px;
-            margin: 10px auto;
             cursor: pointer;
-            text-decoration: none;
-            width: 80%;
-            font-size: 16px;
-            transition: 0.3s;
+            font-family: inherit;
+            font-size: 15px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-align: center;
         }
-        .choice-btn:hover {
-            background-color: #66fcf1;
-            color: #0b0c10;
+        .btn:hover {
+            background-color: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
         }
-        .death { color: #ff4d4d; }
+        .btn-back {
+            background-color: #3f3f46;
+            width: 100%;
+            margin-top: 25px;
+        }
+        .btn-accuse {
+            background-color: #7f1d1d;
+            border-color: #b91c1c;
+            grid-column: span 2;
+        }
+        .btn-accuse:hover {
+            background-color: #b91c1c;
+        }
+        .timeline-item {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #3f3f46;
+        }
+        .time-badge { color: #ef4444; font-weight: bold; }
+        .suspect-card {
+            background-color: #242427;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f59e0b;
+            border-radius: 0 4px 4px 0;
+        }
+        .guilty-text { color: #4ade80; font-weight: bold; font-size: 18px; }
+        .wrong-text { color: #f87171; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="scene">
-        <h1>The Midnight School</h1>
-        <p>You woke up inside your English classroom. The lights are off, the clock is stuck at 12:00, and you hear heavy footsteps dragging down the hallway toward your door. What do you do?</p>
-        <button class="choice-btn" onclick="goToScene('hide')">Hide under the teacher's desk</button>
-        <button class="choice-btn" onclick="goToScene('run')">Dash out into the hallway</button>
-    </div>
+    <div id="game-screen"></div>
 </div>
 
 <script>
-    const story = {
-        start: {
-            title: "The Midnight School",
-            text: "You woke up inside your English classroom. The lights are off, the clock is stuck at 12:00, and you hear heavy footsteps dragging down the hallway toward your door. What do you do?",
-            choices: [
-                { text: "Hide under the teacher's desk", target: "hide" },
-                { text: "Dash out into the hallway", target: "run" }
-            ]
-        },
-        hide: {
-            title: "Under the Desk",
-            text: "You squeeze under the desk. The door slowly creaks open. A tall, faceless shadow steps inside, sniffing the air. It stops right next to the desk... but then its phone rings. It answers it and walks away. You survive the night!",
-            choices: [
-                { text: "Play Again", target: "start" }
-            ]
-        },
-        run: {
-            title: "<span class='death'>Game Over</span>",
-            text: "You burst into the hallway. Bad move. The creature was standing right outside the door. Before you can scream, everything goes black.",
-            choices: [
-                { text: "Try Again", target: "start" }
-            ]
+    // Game state tracking
+    const caseData = {
+        title: "The Pokémon Card Kidnapping",
+        intro: "On June 23, 2026, at 17:38, an 11-year-old boy named Gregory Mottingham vanished right outside a Pokémon store in the United Kingdom. He had just purchased a rare Pokémon card for £300 when a man lured him toward a vehicle under the pretense of cleaning it. The doors slammed shut, locked, and the vehicle sped away. As the lead detective, you must review the evidence, cross-examine suspects, and solve the case.",
+        timeline: [
+            { time: "17:28", event: "Gregory walks into the Pokémon store." },
+            { time: "17:32", event: "Gregory finds the 151-booster box." },
+            { time: "17:33", event: "Gregory goes to the cashier to pay. At the exact same time, a man named Alexander walks into the store." },
+            { time: "17:34", event: "Gregory buys the card pack for £300. Alexander searches around but can't find the card box anymore." },
+            { time: "17:36", event: "Gregory starts to walk out of the store. Alexander follows right behind him." },
+            { time: "17:38", event: "Gregory walks near the bus stop. He is approached, lured away, and intercepted by an unmarked white van with a construction label disguise." }
+        ],
+        suspects: {
+            alexander: {
+                name: "Alexander Foed Hungary",
+                motive: "Desperately wanted the £300 Greninja ex SIR card so he could beat his best friend in a Pokémon showdown, and didn't want anyone else in the city owning it.",
+                alibi: "Claims he was at a nearby gas station using the toilet during the exact time of the kidnapping.",
+                evidence: "CCTV logs show Alexander entering the gas station bathroom before 17:38... but there is absolutely no footage of him ever leaving through the front door."
+            },
+            rodrigo: {
+                name: "Rodrigo Martini",
+                motive: "Was nearby selling lemonade to save up for Robux. Entered the Pokémon store to look for a gift card, but they didn't sell them, so he left empty-handed.",
+                alibi: "Verified by the shop's main security cameras.",
+                evidence: "Store CCTV confirms he exited at the same time as the others, completely out in the open, proving he was just a regular bystander."
+            },
+            shopkeeper: {
+                name: "The Shop Keeper",
+                motive: "Rumored to be running a side scam selling fake cards for high prices, and might want to avoid getting caught.",
+                alibi: "Claims he was on an intensive phone call with his best friend during the incident.",
+                evidence: "Phone logs confirm an active call matching his timeline perfectly."
+            },
+            homeless: {
+                name: "The Homeless Man",
+                motive: "He sits outside and sees everything. He knows the extreme value of the card and could easily get back on his feet if he stole and sold it.",
+                alibi: "Remained on the street corner on camera.",
+                evidence: "Street CCTV confirms he stayed in his spot watching the road, completely away from the crime scene location."
+            }
         }
     };
 
-    function goToScene(sceneKey) {
-        const scene = story[sceneKey];
-        document.getElementById('scene').innerHTML = `
-            <h1>${scene.title}</h1>
-            <p>${scene.text}</p>
-            ${scene.choices.map(c => `<button class="choice-btn" onclick="goToScene('${c.target}')">${c.text}</button>`).join('')}
+    function renderMainScreen() {
+        document.getElementById('game-screen').innerHTML = `
+            <h1>${caseData.title}</h1>
+            <p>${caseData.intro}</p>
+            
+            <h2>Investigation Board</h2>
+            <div class="menu-grid">
+                <button class="btn" onclick="renderTimeline()">View Incident Timeline</button>
+                <button class="btn" onclick="renderSuspects()">Interrogate Suspects</button>
+                <button class="btn" onclick="renderClues()">Examine CCTV & Clues</button>
+                <button class="btn btn-accuse" onclick="renderAccuse()">⚠️ ACCUSE THE CULPRIT ⚠️</button>
+            </div>
         `;
     }
+
+    function renderTimeline() {
+        let timelineHTML = `
+            <h1>Incident Timeline</h1>
+            <p>Review the exact sequence of events on 23/06/2026:</p>
+            <div style="margin-top: 20px;">
+        `;
+        caseData.timeline.forEach(item => {
+            timelineHTML += `
+                <div class="timeline-item">
+                    <span class="time-badge">[${item.time}]</span> ${item.event}
+                </div>
+            `;
+        });
+        timelineHTML += `
+            </div>
+            <button class="btn btn-back" onclick="renderMainScreen()">Return to Board</button>
+        `;
+        document.getElementById('game-screen').innerHTML = timelineHTML;
+    }
+
+    function renderSuspects() {
+        let suspectsHTML = `
+            <h1>Suspect Dossiers</h1>
+            <p>Click any suspect to view their motive and alibi statement:</p>
+            <div style="margin-top: 20px;">
+        `;
+        Object.keys(caseData.suspects).forEach(key => {
+            const s = caseData.suspects[key];
+            suspectsHTML += `
+                <div class="suspect-card">
+                    <strong>Name:</strong> ${s.name}<br>
+                    <strong>Stated Alibi:</strong> ${s.alibi}<br>
+                    <strong>Possible Motive:</strong> ${s.motive}
+                </div>
+            `;
+        });
+        suspectsHTML += `
+            </div>
+            <button class="btn btn-back" onclick="renderMainScreen()">Return to Board</button>
+        `;
+        document.getElementById('game-screen').innerHTML = suspectsHTML;
+    }
+
+    function renderClues() {
+        document.getElementById('game-screen').innerHTML = `
+            <h1>Forensic & Digital Clues</h1>
+            <p>Your team collected these critical findings from the scene:</p>
+            
+            <div class="suspect-card" style="border-left-color: #ef4444;">
+                <strong>Clue 1: Store Exit Footage</strong><br>
+                CCTV shows Rodrigo Martini exiting right at the same time as Gregory and Alexander. However, Rodrigo's hands are empty and his actions clear him of moving toward the vehicle track.
+            </div>
+            
+            <div class="suspect-card" style="border-left-color: #ef4444;">
+                <strong>Clue 2: The Gas Station Dynamic</strong><br>
+                Alexander Hungarian's alibi falls completely flat. Gas station CCTV clearly tracks him entering the restroom corridor right before the kidnapping took place, but he never exited past the main cameras, suggesting he escaped out the back window directly toward his unmarked white van.
+            </div>
+            
+            <button class="btn btn-back" onclick="renderMainScreen()">Return to Board</button>
+        `;
+    }
+
+    function renderAccuse() {
+        document.getElementById('game-screen').innerHTML = `
+            <h1>Issue an Arrest Warrant</h1>
+            <p>Who intercepted Gregory Mottingham outside the Pokémon shop to steal the Greninja ex SIR card?</p>
+            
+            <div class="menu-grid">
+                <button class="btn" onclick="verifyAccusation('alexander')">Alexander Foed Hungary</button>
+                <button class="btn" onclick="verifyAccusation('rodrigo')">Rodrigo Martini</button>
+                <button class="btn" onclick="verifyAccusation('shopkeeper')">The Shop Keeper</button>
+                <button class="btn" onclick="verifyAccusation('homeless')">The Homeless Man</button>
+            </div>
+            <button class="btn btn-back" onclick="renderMainScreen()">Cancel</button>
+        `;
+    }
+
+    function verifyAccusation(suspectKey) {
+        if (suspectKey === 'alexander') {
+            document.getElementById('game-screen').innerHTML = `
+                <h1>Case Solved!</h1>
+                <p class="guilty-text">"Our detective has solved the case..."</p>
+                <p><strong>Alexander Foed Hungary is GUILTY!</strong></p>
+                <p>Faced with your evidence, Alexander broke down and confessed. At exactly 17:38, he spotted Gregory holding the valuable booster pack. Driven by sheer competition and greed to dominate his friend in an upcoming Pokémon showdown, he decided he had to have it.</p>
+                <p>He slipped out of the gas station bathroom window, bypassed the cameras, intercepted Gregory with a fake offer for a €50 Greninja card, masked him, and threw him into his disguised construction van. Thanks to your tracking, Gregory was found safe and his cards were returned!</p>
+                <button class="btn btn-back" onclick="renderMainScreen()">Play Again</button>
+            `;
+        } else {
+            const name = caseData.suspects[suspectKey].name;
+            document.getElementById('game-screen').innerHTML = `
+                <h1>Wrong Accusation!</h1>
+                <p class="wrong-text">An innocent citizen was falsely accused!</p>
+                <p>You issued an arrest warrant for <strong>${name}</strong>, but their alibi safely held up under investigation. Meanwhile, the true culprit managed to escape across the border with the stolen Greninja card.</p>
+                <button class="btn btn-back" onclick="renderAccuse()">Try Accusing Someone Else</button>
+            `;
+        }
+    }
+
+    // Start the game loop
+    renderMainScreen();
 </script>
 
 </body>
