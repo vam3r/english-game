@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Pokémon Card Kidnapping - 3D Case File</title>
+    <title>The Pokémon Store Mystery - 3D Exploration</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #09090b;
-            font-family: 'Courier New', Courier, monospace;
-            color: #e2e8f0;
+            background-color: #050505;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
             user-select: none;
         }
         #canvas-container {
@@ -22,313 +22,380 @@
             left: 0;
             z-index: 1;
         }
-        #ui-layer {
+        #ui-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             z-index: 10;
-            pointer-events: none; /* Let clicks pass through to 3D scene */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            padding: 20px;
             box-sizing: border-box;
-            padding: 20px;
         }
-        .interactive {
-            pointer-events: auto; /* Re-enable clicking for UI buttons/panels */
-        }
-        .header-panel {
-            background: rgba(24, 24, 27, 0.85);
-            border: 2px solid #3f3f46;
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-            max-width: 500px;
-            margin: 0 auto;
-            backdrop-filter: blur(4px);
-        }
-        h1 { color: #ef4444; margin: 0 0 5px 0; font-size: 22px; }
-        .instructions { color: #f59e0b; font-size: 13px; margin: 0; }
+        .interactive { pointer-events: auto; }
         
-        .display-panel {
-            background: rgba(18, 18, 20, 0.9);
-            border: 2px solid #ef4444;
-            padding: 20px;
+        /* HUD Top Styling */
+        .hud-top {
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid #334155;
+            padding: 12px 24px;
             border-radius: 8px;
             max-width: 600px;
-            width: 90%;
-            margin: 0 auto 20px auto;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
-        }
-        p { font-size: 15px; line-height: 1.5; margin: 0 0 15px 0; }
-        
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .btn {
-            background-color: #27272a;
-            color: #f4f4f5;
-            border: 1px solid #52525b;
-            padding: 10px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 14px;
-            border-radius: 4px;
-            transition: all 0.2s;
+            margin: 0 auto;
+            backdrop-filter: blur(4px);
             text-align: center;
         }
-        .btn:hover {
-            background-color: #ef4444;
-            color: white;
-            border-color: #ef4444;
+        h1 { color: #ef4444; margin: 0 0 5px 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .controls-hint { color: #38bdf8; font-size: 13px; font-weight: bold; margin: 0; }
+
+        /* Crosshair for steering/looking */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none;
         }
-        .btn-accuse {
-            background-color: #7f1d1d;
-            border-color: #b91c1c;
+
+        /* Proximity Prompt Interrogation Popups */
+        #interaction-prompt {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(239, 68, 68, 0.9);
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 1px;
+            display: none;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+            z-index: 15;
         }
-        .btn-accuse:hover {
-            background-color: #b91c1c;
+
+        /* Case Dialogue Windows */
+        .dialogue-box {
+            background: rgba(9, 9, 11, 0.95);
+            border: 2px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 650px;
+            width: 90%;
+            margin: 0 auto 30px auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            display: none;
         }
-        .success { color: #4ade80; font-weight: bold; }
-        .fail { color: #f87171; font-weight: bold; }
+        .dialogue-box p { font-size: 15px; line-height: 1.6; margin: 0 0 15px 0; color: #e4e4e7; }
+        
+        .btn-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn {
+            background: #27272a;
+            color: #fff;
+            border: 1px solid #52525b;
+            padding: 10px;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #f59e0b; color: #000; border-color: #f59e0b; }
+        .btn-danger { background: #7f1d1d; border-color: #b91c1c; grid-column: span 2; }
+        .btn-danger:hover { background: #b91c1c; color: white; }
     </style>
-    <!-- Load Three.js Engine Framework from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="canvas-container"></div>
+    <div id="crosshair"></div>
 
-    <div id="ui-layer">
-        <div class="header-panel interactive">
-            <h1>The Pokémon Card Kidnapping</h1>
-            <p class="instructions">🖱️ CLICK ON THE 3D OBJECTS IN THE SCENE TO INVESTIGATE</p>
+    <div id="ui-overlay">
+        <div class="hud-top interactive">
+            <h1>Mall Crime Scene Investigation</h1>
+            <p class="controls-hint">⌨️ MOVE: W, A, S, D | 🖱️ LOOK: CLICK & DRAG MOUSE</p>
         </div>
 
-        <div class="display-panel interactive" id="info-panel">
-            <!-- Dynamic Content Injected Here -->
+        <div id="interaction-prompt">PRESS [ E ] TO INVESTIGATE</div>
+
+        <div class="dialogue-box interactive" id="dialogue-window">
+            <div id="dialogue-content"></div>
         </div>
     </div>
 
 <script>
-    // --- 3D ENGINE SETUP ---
+    // --- ENGINE & SCENE GENERATION ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x09090b);
-    scene.fog = new THREE.FogExp2(0x09090b, 0.04);
+    scene.background = new THREE.Color(0x0a0a0c);
+    scene.fog = new THREE.FogExp2(0x0a0a0c, 0.025);
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 18, 22);
-    camera.lookAt(0, 0, -2);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // Position camera at human eye-level heights
+    camera.position.set(0, 2, 25); 
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // --- LIGHTING ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+    // --- REALISTIC MALL LIGHTING ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    directionalLight.position.set(10, 20, 10);
-    scene.add(directionalLight);
-
-    // Spotlight acting as a street lantern / investigation light
-    const spotLight = new THREE.SpotLight(0xef4444, 2, 40, Math.PI / 4, 0.5, 1);
-    spotLight.position.set(0, 15, 0);
-    scene.add(spotLight);
-
-    // --- CREATE 3D ENVIRONMENT WORLD ---
-    // Dark Asphalt Floor
-    const groundGeo = new THREE.PlaneGeometry(60, 60);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
-
-    // Grid lines for hacker/cyber map visual feel
-    const grid = new THREE.GridHelper(60, 30, 0x3f3f46, 0x27272a);
-    grid.position.y = 0.01;
-    scene.add(grid);
-
-    // Storage array for interactable assets
-    const clickTargets = [];
-
-    function createSceneObject(geometry, material, x, z, name, labelText, colorHex) {
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, geometry.parameters.height / 2, z);
-        mesh.name = name;
-        scene.add(mesh);
-        clickTargets.push(mesh);
-
-        // Add a small glowing floating indicator beacon above each interactive object
-        const beaconGeo = new THREE.TorusGeometry(0.4, 0.1, 8, 24);
-        const beaconMat = new THREE.MeshBasicMaterial({ color: colorHex });
-        const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-        beacon.position.set(x, geometry.parameters.height + 1.2, z);
-        beacon.rotation.x = Math.PI / 2;
-        beacon.name = name + "_beacon";
-        scene.add(beacon);
+    // Neon Mall Ceiling Track Lights
+    const createMallLight = (x, z, color) => {
+        const light = new THREE.PointLight(color, 0.8, 25);
+        light.position.set(x, 7, z);
+        scene.add(light);
         
-        return mesh;
+        // Visual light bulb sphere
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: color }));
+        bulb.position.set(x, 7, z);
+        scene.add(bulb);
+    };
+    createMallLight(-15, -5, 0x38bdf8); // Blue light near Pokemon
+    createMallLight(15, -5, 0x22c55e);  // Green light near Gas Station
+    createMallLight(0, 15, 0xeab308);   // Yellow light near witness bench
+
+    // --- GENERATING THE MALL FLOOR AND ARCHITECTURE ---
+    // Polished Reflective Mall Tile Floor
+    const floorGeo = new THREE.PlaneGeometry(80, 80);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.15, metalness: 0.1 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    // Architectural Pillars (Cylinders instead of blocks)
+    const pillarGeo = new THREE.CylinderGeometry(0.6, 0.6, 8, 16);
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.5 });
+    const addPillar = (x, z) => {
+        const p = new THREE.Mesh(pillarGeo, pillarMat);
+        p.position.set(x, 4, z);
+        scene.add(p);
+    };
+    addPillar(-10, 5); addPillar(10, 5); addPillar(-10, -15); addPillar(10, -15);
+
+    // --- GAME DATA INTERACTIONS ---
+    const npcs = [];
+    let activeNpc = null;
+
+    // Advanced Procedural Character Creator (Generates normal looking figures instead of cubes)
+    function createCharacter(x, z, outfitColor, headColor, name, labelText) {
+        const group = new THREE.Group();
+
+        // Legs/Pants (Cylinder)
+        const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 12), new THREE.MeshStandardMaterial({ color: 0x111827 }));
+        legs.position.y = 0.6;
+        group.add(legs);
+
+        // Torso/Jacket (Capsule Shape)
+        const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 1.0, 8, 12), new THREE.MeshStandardMaterial({ color: outfitColor, roughness: 0.6 }));
+        torso.position.y = 1.6;
+        group.add(torso);
+
+        // Head (Sphere)
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), new THREE.MeshStandardMaterial({ color: headColor, roughness: 0.8 }));
+        head.position.y = 2.4;
+        group.add(head);
+
+        group.position.set(x, 0, z);
+        group.userData = { name: name, label: labelText };
+        scene.add(group);
+        npcs.push(group);
+
+        // Neon marker ring underneath character feet
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.0, 16), new THREE.MeshBasicMaterial({ color: outfitColor, side: THREE.DoubleSide }));
+        ring.rotation.x = Math.PI/2;
+        ring.position.set(x, 0.02, z);
+        scene.add(ring);
     }
 
-    // 1. Pokémon Store (Neon Blue Building)
-    const storeMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.4 });
-    createSceneObject(new THREE.BoxGeometry(6, 5, 6), storeMat, -8, -5, "store", "POKÉMON STORE", 0x3b82f6);
+    // Spawn the Suspect Cast from the case planning document
+    createCharacter(-15, -8, 0xef4444, 0xffdbac, "alexander", "Alexander Hungarian"); 
+    createCharacter(15, -8, 0x22c55e, 0xe0a96d, "shopkeeper", "The Pokémon Store Clerk");
+    createCharacter(-8, 12, 0x3b82f6, 0xc58c85, "rodrigo", "Rodrigo Martini");
+    createCharacter(8, 12, 0x78350f, 0x8d5524, "homeless", "The Corridor Witness");
 
-    // 2. The Disguised White Construction Van (White Long Box)
-    const vanMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f5, roughness: 0.5 });
-    createSceneObject(new THREE.BoxGeometry(3, 2.5, 6), vanMat, 4, 4, "van", "WHITE VAN", 0xffffff);
+    // Kidnapping Van Scene Object (Smooth curved edges capsule van body shape)
+    const vanGroup = new THREE.Group();
+    const vanBody = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 7), new THREE.MeshStandardMaterial({ color: 0xdddddd }));
+    vanBody.position.y = 1.8;
+    vanGroup.add(vanBody);
+    // Wheels (curved cylinders)
+    const wheelGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.8, 16);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const w1 = new THREE.Mesh(wheelGeo, wheelMat); w1.rotation.z = Math.PI/2; w1.position.set(2, 0.6, 2); vanGroup.add(w1);
+    const w2 = new THREE.Mesh(wheelGeo, wheelMat); w2.rotation.z = Math.PI/2; w2.position.set(-2, 0.6, 2); vanGroup.add(w2);
+    const w3 = new THREE.Mesh(wheelGeo, wheelMat); w3.rotation.z = Math.PI/2; w3.position.set(2, 0.6, -2); vanGroup.add(w3);
+    const w4 = new THREE.Mesh(wheelGeo, wheelMat); w4.rotation.z = Math.PI/2; w4.position.set(-2, 0.6, -2); vanGroup.add(w4);
+    
+    vanGroup.position.set(0, 0, -18);
+    vanGroup.userData = { name: "van", label: "Disguised White Van" };
+    scene.add(vanGroup);
+    npcs.push(vanGroup);
 
-    // 3. Gas Station (Green / Yellow Building)
-    const gasMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
-    createSceneObject(new THREE.BoxGeometry(7, 4, 5), gasMat, 10, -8, "gas_station", "GAS STATION", 0x22c55e);
-
-    // 4. Street Corner / Witness Area (Dark Column placeholder)
-    const cornerMat = new THREE.MeshStandardMaterial({ color: 0x4b5563 });
-    createSceneObject(new THREE.BoxGeometry(2, 3, 2), cornerMat, -6, 8, "corner", "WITNESS CORNER", 0xa1a1aa);
-
-
-    // --- GAME TEXT DATA DATABASE ---
-    const gameData = {
-        main: {
-            text: "<strong>CASE BRIEFING:</strong> On June 23, 2026, at 17:38, 11-year-old Gregory Mottingham was kidnapped right outside a UK Pokémon store after purchasing a rare £300 card. A suspect lured him into a vehicle under false pretenses. Click the 3D world elements to evaluate data logs, cross-examine details, and find the culprit.",
-            options: [{ text: "Open Accusation Terminal", action: "goAccuse" }]
+    // --- CASE DIALOGUE SCRIPT COMPILER ---
+    const caseFiles = {
+        intro: {
+            text: "<strong>CASE COMMENCEMENT LOG:</strong> Gregory Mottingham (Age 11) vanished at exactly 17:38 right outside this terminal space after securing a rare £300 card. Use WASD keys to physically move around the room and inspect suspects to review their alibis. Uncover who is lying to crack the kidnapping file.",
+            choices: [{ text: "Begin Searching Area", action: "close" }]
         },
-        store: {
-            text: "<strong>[LOCATION: THE POKÉMON STORE]</strong><br>CCTV Timeline Summary:<br>• 17:28 - Gregory walks in.<br>• 17:33 - Gregory handles buying the card. Simultaneously, suspect <strong>Alexander Foed Hungary</strong> arrives.<br>• 17:36 - Gregory leaves out the front doors. Alexander trails right behind him tracking him down.",
-            options: [{ text: "Question Shopkeeper", action: "goShopkeeper" }, { text: "Back to Map Overview", action: "goMain" }]
+        alexander: {
+            text: "<strong>SUSPECT INTERROGATION: ALEXANDER HUNGARIAN</strong><br><br>• <em>Motive:</em> Desperately wanted the rare Greninja card to dominate his best friend in a Pokémon showdown sequence.<br>• <em>Alibi Statement:</em> 'I wasn't outside! I was tucked away in the gas station facility's restrooms washroom stall down the corridor during those exact minutes.'<br>• <em>Digital Discovery:</em> Checking the gas station tech files reveals he entered the restroom hallway... but <strong>never walked back out past the main cameras</strong>. There's a back window left wide open!",
+            choices: [{ text: "Exit Interaction", action: "close" }, { text: "⚖️ ARREST THIS SUSPECT", action: "accuse_alex" }]
         },
         shopkeeper: {
-            text: "<strong>[WITNESS INTERROGATION: THE SHOPKEEPER]</strong><br>• <em>Motive Check:</em> Rumored to swap cards for profit margins.<br>• <em>Alibi Statement:</em> Confirms he stayed behind the terminal desk completely locked into a frantic voice phone call with his companion.<br>• <em>Forensics:</em> Digital phone records back up his status window accurately. He is cleared.",
-            options: [{ text: "Inspect Store Exterior", action: "goStore" }]
-        },
-        van: {
-            text: "<strong>[EVIDENCE VEHICLE: UNMARKED WHITE VAN]</strong><br>Found hidden down an access road disguised with a fake cardboard construction company magnetic tag. Inside, forensic tracking located a mask fabric matching descriptions. Gregory was intercepted directly at this vehicle site at 17:38 when a suspect promised a premium card transaction for €50.",
-            options: [{ text: "Back to Map Overview", action: "goMain" }]
-        },
-        gas_station: {
-            text: "<strong>[LOCATION: THE NEARBY GAS STATION]</strong><br>This is the primary location utilized by suspect <strong>Alexander Foed Hungary</strong> for his alibi statement. He claims he was inside the facility's locked bathroom stalls during the exact minutes the kidnapping took place down the block.",
-            options: [{ text: "Check Bathroom CCTV Logs", action: "goCCTV" }, { text: "Back to Map Overview", action: "goMain" }]
-        },
-        cctv: {
-            text: "<strong>[DIGITAL EVIDENCE: GAS STATION CCTV]</strong><br>CRITICAL DISCOVERY: Video tracks Alexander entering the single corridor bathroom access path before 17:38. However, *he never returns past the front cameras*. Investigation shows a rear emergency fire escape window was left unbolted. His alibi is completely broken!",
-            options: [{ text: "Back to Gas Station", action: "goGas" }]
-        },
-        corner: {
-            text: "<strong>[LOCATION: STREET WITNESS CORNER]</strong><br>Two individuals were located tracking events from this junction during the 17:30 hour window.",
-            options: [{ text: "Interview Rodrigo Martini", action: "goRodrigo" }, { text: "Interview Homeless Man", action: "goHomeless" }, { text: "Back to Map Overview", action: "goMain" }]
+            text: "<strong>WITNESS DOSSIER: THE STORE CASHIER</strong><br><br>• <em>Statement:</em> 'Gregory paid £300 for his card boosters here at 17:34. Alexander was lurking inside right behind him, staring at the cards. I stayed stuck behind my checkout register on an active customer service phone call matching the whole incident timeline.' Verified clear.",
+            choices: [{ text: "Exit Interaction", action: "close" }]
         },
         rodrigo: {
-            text: "<strong>[SUSPECT PROFILE: RODRIGO MARTINI]</strong><br>• <em>Motive:</em> Was marketing lemonade nearby to stack funding for Robux vouchers. Ducked inside the card shop checking for gaming inventory.<br>• <em>Alibi:</em> Main traffic CCTV confirms he exited at the matching timeframe as Gregory, but kept walking completely away from the vehicle vector with empty hands.",
-            options: [{ text: "Check Other Witness Corner profiles", action: "goCorner" }]
+            text: "<strong>WITNESS DOSSIER: RODRIGO MARTINI</strong><br><br>• <em>Statement:</em> 'I was simply down here trying to sell fresh lemonade batches to pull together some balance for Robux cards. I saw Gregory step out into the courtyard, but I kept moving away from the vehicles.' Shop camera backup tracking confirms he's totally innocent.",
+            choices: [{ text: "Exit Interaction", action: "close" }]
         },
         homeless: {
-            text: "<strong>[SUSPECT PROFILE: THE HOMELESS MAN]</strong><br>• <em>Motive:</em> Highly alert of street valuations, could sell high-end cargo to get back on his feet.<br>• <em>Alibi:</em> Stated he watched from his corner. Street peripheral cameras confirm he remained fixed to his spot on the concrete grid line, leaving him physically impossible to lock the van doors.",
-            options: [{ text: "Check Other Witness Corner profiles", action: "goCorner" }]
+            text: "<strong>WITNESS DOSSIER: THE CORNER RESIDENT</strong><br><br>• <em>Statement:</em> 'I saw that sketchy white construction van idling outside the main doors. A guy slipped up to the kid promising a €50 transaction deal, shoved him inside, and locked the doors.' Security frames confirm this witness never left his bench slot.",
+            choices: [{ text: "Exit Interaction", action: "close" }]
         },
-        accuse: {
-            text: "<strong>🚨 SYSTEM RESOLUTION WARNING: SELECT THE PRIMARY CULPRIT</strong><br>Choose who orchestrated the event to secure the card assets:",
-            options: [
-                { text: "Alexander Foed Hungary", action: "win" },
-                { text: "Rodrigo Martini", action: "lose" },
-                { text: "The Shopkeeper", action: "lose" },
-                { text: "The Homeless Man", action: "lose" }
-            ]
+        van: {
+            text: "<strong>CRIME SCENE CLUE: DISGUISED WHITE VAN</strong><br><br>The transport used in the 17:38 abduction. It has a fake cardboard construction logo pasted on the panels to throw off patrols. Inside the cabin floorboards, forensic investigators discovered trace packaging scraps from a newly torn Pokémon booster pack...",
+            choices: [{ text: "Exit Interaction", action: "close" }]
         }
     };
 
-    // --- UI NAVIGATION ENGINE ---
-    function updatePanel(sceneKey) {
-        const data = gameData[sceneKey];
-        let html = `<p>${data.text}</p><div class="btn-grid">`;
-        
-        data.options.forEach(opt => {
-            html += `<button class="btn" onclick="handleUiAction('${opt.action}')">${opt.text}</button>`;
-        });
-        
-        html += `</div>`;
-        document.getElementById('info-panel').innerHTML = html;
-    }
+    // --- FIRST PERSON MOVEMENT & CAMERA SYSTEM ---
+    const keys = { w: false, a: false, s: false, d: false };
+    let moveSpeed = 0.15;
+    
+    // Smooth drag-to-look camera configuration variables
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cameraRotation = { yaw: 0, pitch: 0 };
 
-    function handleUiAction(action) {
-        if (action === "goMain") updatePanel("main");
-        else if (action === "goStore") updatePanel("store");
-        else if (action === "goShopkeeper") updatePanel("shopkeeper");
-        else if (action === "goGas") updatePanel("gas_station");
-        else if (action === "goCCTV") updatePanel("cctv");
-        else if (action === "goCorner") updatePanel("corner");
-        else if (action === "goRodrigo") updatePanel("rodrigo");
-        else if (action === "goHomeless") updatePanel("homeless");
-        else if (action === "goAccuse") updatePanel("accuse");
-        else if (action === "win") {
-            document.getElementById('info-panel').innerHTML = `
-                <h2 class="success">CASE SOLVED SUMMARY 🟢</h2>
-                <p>"Our detective has solved the case..." <strong>Alexander Foed Hungary is guilty!</strong> Faced with your evidence matching the broken bathroom window timeline loop, he confessed. Driven by pure jealousy to beat his peer in a Pokémon confrontation showdown, he stole the card and deployed the construction disguise vehicle. Excellent work!</p>
-                <button class="btn" onclick="handleUiAction('goMain')">Restart Terminal Map</button>
-            `;
-        } else if (action === "lose") {
-            document.getElementById('info-panel').innerHTML = `
-                <h2 class="fail">CRITICAL ARREST FAILURE 🔴</h2>
-                <p>Alibi held valid under cross-examination context. The target is clear of actions. The accurate offender managed to shift transport assets across state limits with the card pack.</p>
-                <button class="btn" onclick="handleUiAction('goAccuse')">Return to Accusation Interface</button>
-            `;
+    window.addEventListener('keydown', (e) => { if(e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true; });
+    window.addEventListener('keyup', (e) => { if(e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false; });
+
+    // Click and drag mouse to steer camera look directions naturally
+    window.addEventListener('mousedown', (e) => { isDragging = true; });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mousemove', (e) => {
+        const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
+
+        if (isDragging && document.getElementById('dialogue-window').style.display !== 'block') {
+            cameraRotation.yaw -= deltaMove.x * 0.003;
+            cameraRotation.pitch -= deltaMove.y * 0.003;
+            // Bound vertical looking ranges
+            cameraRotation.pitch = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, cameraRotation.pitch));
+
+            camera.quaternion.setFromEuler(new THREE.Euler(cameraRotation.pitch, cameraRotation.yaw, 0, 'YXZ'));
         }
-    }
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
 
-    // --- RAYCASTING (DETECTING CLICKS ON 3D OBJECTS) ---
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    window.addEventListener('click', (event) => {
-        // Evaluate normalize device layout coordinates for mouse pointer
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(clickTargets);
-
-        if (intersects.length > 0) {
-            const hitName = intersects[0].object.name;
-            if (hitName === "store") updatePanel("store");
-            if (hitName === "van") updatePanel("van");
-            if (hitName === "gas_station") updatePanel("gas_station");
-            if (hitName === "corner") updatePanel("corner");
+    // Handle Interrogation Keys
+    window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'e' && activeNpc) {
+            triggerDialogue(activeNpc.userData.name);
         }
     });
 
-    // --- ANIMATION DISPLAY LOOP ---
+    // --- GAME ACTIONS & RESOLUTIONS ENGINE ---
+    const promptElement = document.getElementById('interaction-prompt');
+    const dialogueWindow = document.getElementById('dialogue-window');
+    const dialogueContent = document.getElementById('dialogue-content');
+
+    function triggerDialogue(npcKey) {
+        keys.w = keys.a = keys.s = keys.d = false; // Freeze player position movement
+        promptElement.style.display = "none";
+        
+        const data = caseFiles[npcKey];
+        let html = `<p>${data.text}</p><div class="btn-choices">`;
+        data.choices.forEach(c => {
+            html += `<button class="btn ${c.action.includes('accuse') ? 'btn-danger' : ''}" onclick="uiAction('${c.action}')">${c.text}</button>`;
+        });
+        html += `</div>`;
+        
+        dialogueContent.innerHTML = html;
+        dialogueWindow.style.display = "block";
+    }
+
+    function uiAction(action) {
+        if (action === "close") {
+            dialogueWindow.style.display = "none";
+        } else if (action === "accuse_alex") {
+            dialogueContent.innerHTML = `
+                <h2 style="color:#22c55e; margin:0 0 10px 0;">CASE SOLVED SUCCESSFUL! 🟢</h2>
+                <p><strong>Excellent Detective Work!</strong> You arrested Alexander Foed Hungary. When confronted with the gas station CCTV gap showing he escaped through the bathroom back window, he broke down and confessed.</p>
+                <p>Driven by pure greed and intense competition to beat his best friend in an upcoming Pokémon showdown tournament, he plotted the whole heist to steal Gregory's booster cards. Gregory was safely located down the street and reunited with his cards. Your assignment project is complete!</p>
+                <button class="btn" onclick="location.reload()">Reset Map Simulation</button>
+            `;
+        }
+    }
+
+    // --- RUN-TIME TICK LOOP ---
     function animate() {
         requestAnimationFrame(animate);
 
-        // Slowly spin the floating indicator rings over targets
-        scene.children.forEach(child => {
-            if (child.name && child.name.includes("_beacon")) {
-                child.rotation.z += 0.02;
+        // 1. WASD Vector Movement relative to camera perspective view vectors
+        if (dialogueWindow.style.display !== 'block') {
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            forward.y = 0; forward.normalize();
+            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+            right.y = 0; right.normalize();
+
+            if (keys.w) camera.position.addScaledVector(forward, moveSpeed);
+            if (keys.s) camera.position.addScaledVector(forward, -moveSpeed);
+            if (keys.a) camera.position.addScaledVector(right, -moveSpeed);
+            if (keys.d) camera.position.addScaledVector(right, moveSpeed);
+
+            // Keep player bounded safely within mall courtyard floor limits
+            camera.position.x = Math.max(-35, Math.min(35, camera.position.x));
+            camera.position.z = Math.max(-35, Math.min(35, camera.position.z));
+        }
+
+        // 2. Real-time Proximity Check to 3D models
+        let closeToTarget = false;
+        for (let npc of npcs) {
+            let dist = camera.position.distanceTo(npc.position);
+            if (dist < 4.5) {
+                activeNpc = npc;
+                closeToTarget = true;
+                if (dialogueWindow.style.display !== 'block') {
+                    promptElement.innerHTML = `PRESS [ E ] TO INVESTIGATE ${npc.userData.label.toUpperCase()}`;
+                    promptElement.style.display = "block";
+                }
+                break;
             }
-        });
+        }
+        if (!closeToTarget) {
+            activeNpc = null;
+            promptElement.style.display = "none";
+        }
 
         renderer.render(scene, camera);
     }
 
-    // Adjust perspective calculation mapping if layout dimensions scale
+    // Dynamic browser scaling fix mapping
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Run engine on start loop
+    // Start Simulation Loop
     animate();
-    updatePanel("main");
-
+    setTimeout(() => { triggerDialogue('intro'); }, 400);
 </script>
 </body>
 </html>
