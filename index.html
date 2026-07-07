@@ -204,7 +204,7 @@
     // Rodrigo's Lemonade Stand Object
     spawnBuilding(3.5, 1.6, 2, -10, 6, 0xf59e0b);
 
-    // --- DETAILED CHARACTER MODEL BUILDER (REPLACING CIRCLES/CYLINDERS) ---
+    // --- DETAILED CHARACTER MODEL BUILDER (REPLACING CIRCLES) ---
     const npcs = [];
     let activeNpc = null;
 
@@ -232,22 +232,20 @@
         const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.12, 2.18, 0.22); humanGroup.add(leftEye);
         const rightEye = new THREE.Mesh(eyeGeo, eyeMat); rightEye.position.set(0.12, 2.18, 0.22); humanGroup.add(rightEye);
 
-        // Left Leg Block
+        // Legs
         const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.8, 0.28), new THREE.MeshStandardMaterial({ color: pantsColor }));
         leftLeg.position.set(-0.2, 0.4, 0);
         humanGroup.add(leftLeg);
 
-        // Right Leg Block
         const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.8, 0.28), new THREE.MeshStandardMaterial({ color: pantsColor }));
         rightLeg.position.set(0.2, 0.4, 0);
         humanGroup.add(rightLeg);
 
-        // Left Arm Segment
+        // Arms
         const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.85, 0.24), new THREE.MeshStandardMaterial({ color: shirtColor }));
         leftArm.position.set(-0.49, 1.25, 0);
         humanGroup.add(leftArm);
 
-        // Right Arm Segment
         const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.85, 0.24), new THREE.MeshStandardMaterial({ color: shirtColor }));
         rightArm.position.set(0.49, 1.25, 0);
         humanGroup.add(rightArm);
@@ -271,12 +269,12 @@
         scene.add(floorBeacon);
     }
 
-    // --- SPAWNING ALL 5 SUSPECTS FROM THE PLANNING DOCUMENT ---
+    // --- SPAWNING ALL 5 SUSPECTS FROM THE PLANNING FILE ---
     generateSuspect(14, -3, 0xdc2626, 0x1f2937, 0xffdbac, 0x451a03, "alexander", "Alexander Foed Hungary"); 
     generateSuspect(-14, -3, 0x2563eb, 0x3f3f46, 0xe0a96d, 0x18181b, "shopkeeper", "The Pokémon Shopkeeper");
     generateSuspect(-10, 8, 0xeab308, 0x0284c7, 0xc58c85, 0x27272a, "rodrigo", "Rodrigo Martini");
     generateSuspect(4, 15, 0x52525b, 0x09090b, 0x8d5524, 0x52525b, "homeless", "The Homeless Man");
-    generateSuspect(0, 11, 0x06b6d4, 0x4b5563, 0xffe4e6, 0xd97706, "gregory", "Gregory Mottingham (Victim File)");
+    generateSuspect(0, 11, 0x06b6d4, 0x4b5563, 0xffe4e6, 0xd97706, "gregory", "Gregory Mottingham");
 
     // Disguised White Cargo Van Construction Asset
     const vanGroup = new THREE.Group();
@@ -286,7 +284,7 @@
     
     // Disguise Construction Overlay Panels
     const overlayGeo = new THREE.BoxGeometry(0.08, 1.1, 3.6);
-    const overlayMat = new THREE.MeshStandardMaterial({ color: 0xf97316 }); // Orange Construction Sign Accent
+    const overlayMat = new THREE.MeshStandardMaterial({ color: 0xf97316 }); 
     const panelL = new THREE.Mesh(overlayGeo, overlayMat); panelL.position.set(-2.31, 1.8, 0); vanGroup.add(panelL);
     const panelR = new THREE.Mesh(overlayGeo, overlayMat); panelR.position.set(2.31, 1.8, 0); vanGroup.add(panelR);
 
@@ -302,34 +300,34 @@
     scene.add(vanGroup);
     npcs.push(vanGroup);
 
-    // --- GAME CASE FILES DATA ENGINE ---
+    // --- GAME CASE FILES DATA ENGINE (FIXED STRING LITERALS) ---
     const caseFiles = {
         intro: {
-            text: "<strong>CRIME DOSSIER: 23/06/2026 @ 17:38</strong><br>An 11-year-old boy named Gregory Mottingham was abducted right outside a United Kingdom Pokémon outlet after purchasing a rare item layout. Clues indicate a suspect using an unmarked white van hidden with an orange construction label overlay took him.<br><br><strong>TIMELINE SUMMARY (PART 4):</strong><br><table class="timeline-table"><tr><th>Time</th><th>Event Matrix Log</th></tr><tr><td>17:28</td><td>Gregory walks into Pokémon store</td></tr><tr><td>17:32</td><td>Gregory finds the booster box selection</td></tr><tr><td>17:33</td><td>Gregory goes to cashier terminal; Alexander logs entry right behind</td></tr><tr><td>17:34</td><td>Gregory buys the pack items for $300; Alexander fails to find the card setup</td></tr><tr><td>17:36</td><td>Gregory exits out towards street lane; Alexander trails immediately behind</td></tr><tr><td>17:38</td><td>Gregory reaches the bus stop layout corner; Alexander initiates ambush vector</td></tr></table><br>Walk near any suspect and press <strong>[ E ]</strong> to launch cross-examination files.",
+            text: `<strong>CRIME DOSSIER: 23/06/2026 @ 17:38</strong><br>An 11-year-old boy named Gregory Mottingham was abducted right outside a United Kingdom Pokémon outlet after purchasing a rare item layout. Clues indicate a suspect using an unmarked white van hidden with an orange construction label overlay took him.<br><br><strong>TIMELINE SUMMARY (PART 4):</strong><br><table class='timeline-table'><tr><th>Time</th><th>Event Matrix Log</th></tr><tr><td>17:28</td><td>Gregory walks into Pokémon store</td></tr><tr><td>17:32</td><td>Gregory finds the booster box selection</td></tr><tr><td>17:33</td><td>Gregory goes to cashier terminal; Alexander logs entry right behind</td></tr><tr><td>17:34</td><td>Gregory buys the pack items for $300; Alexander fails to find the card setup</td></tr><tr><td>17:36</td><td>Gregory exits out towards street lane; Alexander trails immediately behind</td></tr><tr><td>17:38</td><td>Gregory reaches the bus stop layout corner; Alexander initiates ambush vector</td></tr></table><br>Walk near any suspect and press <strong>[ E ]</strong> to launch cross-examination files.`,
             choices: [{ text: "Open Active Interrogations", action: "close" }]
         },
         alexander: {
-            text: "<strong>SUSPECT SEARCH PROTOCOL: ALEXANDER FOED HUNGARY</strong><br><br>• <strong>Motive Profile:</strong> Wanted to kill or eliminate obstacles to get the exclusive card item, ensuring he remained the solitary collector in the city to beat his companion in an upcoming Pokémon showdown simulation.<br>• <strong>Alibi Defense:</strong> 'I was locked inside the local gas station restroom toilets across the lane during those exact timeline frames. I was never outside!'<br>• <strong>Forensic Defect:</strong> Station CCTV frames prove he walked into the bathroom corridor branch line before 17:38... <strong>but he never came back out past the register counters</strong>. The back emergency window frame was completely unbolted!",
+            text: `<strong>SUSPECT SEARCH PROTOCOL: ALEXANDER FOED HUNGARY</strong><br><br>• <strong>Motive Profile:</strong> Wanted to eliminate obstacles to get the exclusive card item, ensuring he remained the solitary collector in the city to beat his companion in an upcoming Pokémon showdown simulation.<br>• <strong>Alibi Defense:</strong> 'I was locked inside the local gas station restroom toilets across the lane during those exact timeline frames. I was never outside!'<br>• <strong>Forensic Defect:</strong> Station CCTV frames prove he walked into the bathroom corridor branch line before 17:38... <strong>but he never came back out past the register counters</strong>. The back emergency window frame was completely unbolted!`,
             choices: [{ text: "End Cross-Examination", action: "close" }, { text: "⚖️ ARREST ALEXANDER FOR THE CRIME", action: "accuse_alex" }]
         },
         gregory: {
-            text: "<strong>SUSPECT PROFILE FILE: GREGORY MOTTINGHAM (VICTIM VECTOR)</strong><br><br>• <strong>The Theory:</strong> Investigated under the premise that he wanted to 'disappear' permanently to sell his high-stakes card items in a distant city to evade going to school. He previously skipped classes to travel out to a Poké-Con convention.<br>• <strong>Alibi Check:</strong> Physical timeline metrics confirm he was intercepted by force near the bus line grid. He didn't kidnap himself; the white construction van files prove third-party coercion.",
+            text: `<strong>SUSPECT PROFILE FILE: GREGORY MOTTINGHAM (VICTIM VECTOR)</strong><br><br>• <strong>The Theory:</strong> Investigated under the premise that he wanted to 'disappear' permanently to sell his high-stakes card items in another place to evade going to school. He previously skipped classes to travel out to a Poké-Con convention.<br>• <strong>Alibi Check:</strong> Why would he kidnap himself? Physical timeline metrics confirm he was intercepted by force near the bus line grid. The white construction van files prove third-party coercion.`,
             choices: [{ text: "End Cross-Examination", action: "close" }]
         },
         shopkeeper: {
-            text: "<strong>SUSPECT SEARCH PROTOCOL: THE POKÉMON SHOPKEEPER</strong><br><br>• <strong>Motive Profile:</strong> Accused of deploying internal swap scams where he sold counterfeits for top dollar and needed to eliminate tracking traces.<br>• <strong>Alibi Defense:</strong> Proved he stayed stranded at the main register transaction monitor talking to his associate companion over digital mobile networks.<br>• <strong>Verification Status:</strong> Automated network switch tallies fully protect his timeline loop.",
+            text: `<strong>SUSPECT SEARCH PROTOCOL: THE POKÉMON SHOPKEEPER</strong><br><br>• <strong>Motive Profile:</strong> Accused of deploying internal swap scams where he sold counterfeits for top dollar and needed to eliminate tracking traces.<br>• <strong>Alibi Defense:</strong> Proved he stayed stranded at the main register transaction monitor talking to his associate companion over digital mobile networks.<br>• <strong>Verification Status:</strong> Automated network switch tallies fully protect his timeline loop.`,
             choices: [{ text: "End Cross-Examination", action: "close" }]
         },
         rodrigo: {
-            text: "<strong>SUSPECT SEARCH PROTOCOL: RODRIGO MARTINI</strong><br><br>• <strong>Motive Profile:</strong> Managed a lemonade batch stand outside. Saved up earnings to buy Robux digital gift card items, stepping inside the store exactly as Gregory bought his cards. Finding no stock, he walked out onto the pavement lane at the exact matching timestamp.<br>• <strong>Verification Status:</strong> Public street CCTV files confirm his hands were empty and he moved directly away from the van axis point.",
+            text: `<strong>SUSPECT SEARCH PROTOCOL: RODRIGO MARTINI</strong><br><br>• <strong>Motive Profile:</strong> Managed a lemonade batch stand outside. Saved up earnings to buy Robux digital gift card items, stepping inside the store exactly as Gregory bought his cards. Finding no stock, he walked out onto the pavement lane at the exact matching timestamp.<br>• <strong>Verification Status:</strong> Public street CCTV files confirm his hands were empty and he moved directly away from the van axis point.`,
             choices: [{ text: "End Cross-Examination", action: "close" }]
         },
         homeless: {
-            text: "<strong>SUSPECT SEARCH PROTOCOL: THE HOMELESS MAN</strong><br><br>• <strong>Motive Profile:</strong> Stationed on the corner edge grid, he saw the full exchange. If he pocketed a asset setup value of $300, he could get back on his feet.<br>• <strong>Alibi Defense:</strong> Static tracking files show he never left his layout blanket station, making it physically impossible for him to secure the van's sliding rear locking nodes.",
+            text: `<strong>SUSPECT SEARCH PROTOCOL: THE HOMELESS MAN</strong><br><br>• <strong>Motive Profile:</strong> Stationed on the corner edge grid, he saw the full exchange. If he pocketed an asset setup value of $300, he could get back on his feet.<br>• <strong>Alibi Defense:</strong> Static tracking files show he never left his layout blanket station, making it physically impossible for him to secure the van's sliding rear locking nodes.`,
             choices: [{ text: "End Cross-Examination", action: "close" }]
         },
         van: {
-            text: "<strong>CRIME SCENE DATA: DISGUISED WHITE VEHICLE</strong><br><br>Inside the abandoned white utility transport, forensic teams identified a discarded mask element and torn booster cardboard trimmings. The orange magnetic construction overlay labels match Alexander's fingerprints perfectly, exposing his disguise strategy.",
+            text: `<strong>CRIME SCENE DATA: DISGUISED WHITE VEHICLE</strong><br><br>Inside the abandoned white utility transport, forensic teams identified a discarded mask element and torn booster cardboard trimmings. The orange magnetic construction overlay labels match Alexander's fingerprints perfectly, exposing his disguise strategy.`,
             choices: [{ text: "End Cross-Examination", action: "close" }]
         }
     };
@@ -419,13 +417,11 @@
             camera.position.z = Math.max(-45, Math.min(45, camera.position.z));
         }
 
-        // Subtly animate human limbs to make characters feel alive
+        // 100% stable idle animation 
         const pulseTime = Date.now() * 0.0025;
         npcs.forEach(npc => {
             if(npc.userData.name !== "van") {
-                // Breathing shift simulation on arm attachments
-                npc.children[6].rotation.z = Math.sin(pulseTime) * 0.04;
-                npc.children[7].rotation.z = -Math.sin(pulseTime) * 0.04;
+                npc.position.y = Math.sin(pulseTime + npc.position.x) * 0.04;
             }
         });
 
